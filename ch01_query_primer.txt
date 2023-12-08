@@ -1,0 +1,129 @@
+-- # Chater 1: Query Primer
+-- ## Query Basics
+select current_date;
+
+select *
+from region;
+
+describe table region;
+
+show terse tables in PUBLIC;
+
+-- ## Query Clauses
+-- ### The select Clause
+select 'Welcome to Snowflake SQL!';
+
+describe table nation;
+
+select n_nationkey, n_name, n_regionkey
+from nation;
+
+-- #### Column aliases
+select 'Welcome to Snowflake SQL!' as welcome_message,
+    5 * 3.1415927 as circle_circumference,
+    dayname(current_date) as day_of_week;
+
+-- #### Removing duplicates
+select n_regionkey from nation;
+
+select distinct n_regionkey from nation;
+
+-- ### The from Clause
+select n_nationkey, n_name as nation_name,
+    r_name as region_name
+from nation join region
+on nation.n_regionkey = region.r_regionkey;
+
+-- #### Generating Data Sets Using Values
+select *
+from (values
+    ('JAN',1),
+    ('FEB',2),
+    ('MAR',3),
+    ('APP',4),
+    ('MAY',5),
+    ('JUN',6),
+    ('JUL',7),
+    ('AUG',8),
+    ('SEP',9),
+    ('OCT',10),
+    ('NOV',11),
+    ('DEC',12))
+    as months (month_name, month_num);
+
+-- ### The where Clause
+select n_name
+from nation
+where n_name like 'U%';
+
+-- multiple conditions
+select n_name
+from nation
+where n_name like 'U%'
+    or n_name like 'A%';
+
+
+-- ### The group by Clause
+select r_name as  region_name,
+    count(*) as number_of_countries
+from nation join region
+on nation.n_regionkey = region.r_regionkey
+group by r_name;
+
+-- ### The having Clause
+describe table supplier;
+
+select n_name as nation_name,
+    count(*) as number_of_suppliers
+from supplier join nation
+on supplier.s_nationkey = nation.n_nationkey
+group by n_name;
+
+select n_name as nation_name,
+    count(*) as number_of_suppliers
+from supplier join nation
+on supplier.s_nationkey = nation.n_nationkey
+where n_name like '%A'
+group by n_name
+having count(*) > 300;
+
+-- ### The qualify Clause
+select n_name,
+    rank() over (order by length(n_name) desc) as length_rank
+from nation;
+
+select n_name,
+    rank() over (order by length(n_name) desc) as length_rank
+from nation
+qualify length_rank <= 5;
+
+-- ### The order by Clause
+select s_name, s_acctbal
+from supplier
+order by s_acctbal desc;
+
+select s_name, s_acctbal
+from supplier
+order by 2 desc;
+
+-- ### The limit Clause
+select s_name, s_acctbal
+from supplier
+order by s_acctbal desc
+limit 10;
+
+select s_name, s_acctbal
+from supplier
+order by s_acctbal desc
+limit 10 offset 7390;
+
+select s_name, s_acctbal
+from supplier
+order by s_acctbal asc
+limit 10;
+
+-- #### Limit Versus Top
+select top 10 s_name, s_acctbal
+from supplier
+order by s_acctbal desc;
+
