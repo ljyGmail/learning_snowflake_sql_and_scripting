@@ -1,0 +1,91 @@
+-- # Chapter 2: Filtering
+
+-- ## Condition Evaluation
+-- ### Use Parentheses
+
+-- ### Use the not Operator
+use schema learning_sql.public;
+-- ## Condition Components
+-- ### Equality Conditions
+select n_name, r_name
+from nation join region
+on nation.n_regionkey = region.r_regionkey
+where r_name = 'ASIA';
+
+-- ### Inequality Conditions
+select n_name,  r_name
+from nation join region
+on nation.n_regionkey = region.r_regionkey
+where r_name <> 'Asia';
+
+-- ### Range Conditions
+select s_suppkey, s_name
+from supplier
+where s_suppkey between 1 and 10;
+
+select o_orderkey, o_custkey, o_orderdate
+from orders
+where o_orderdate between
+    to_date('29-JAN-1998', 'DD-MON-YYYY')
+    and to_date('30-JAN-1998', 'DD-MON-YYYY');
+
+select n_name from nation
+where n_name between 'GA' and 'IP';
+
+-- ### Membership Conditions
+select c_custkey, c_name, c_mktsegment
+from customer
+where c_mktsegment in ('AUTOMOBILE', 'MACHINERY', 'BUILDING');
+
+-- ### Matching Conditions
+select n_name
+from nation
+where n_name like 'M%';
+
+select n_name
+from nation
+where n_name like 'M%'
+    or n_name like 'U%';
+
+-- regular expression
+select n_name
+from nation
+where regexp_like(n_name, '^[MU].*');
+
+-- ## Null Values
+select 'YES' as is_valid where null = null;
+
+select 'YES' as is_valid where null is null;
+
+create table null_example
+(num_col number, char_col varchar(10))
+as select *
+from (values (1, 'ABC'),
+            (2, 'JKL'),
+            (null, 'QRS'),
+            (3, null));
+
+select * from null_example;
+
+select num_col, char_col
+from null_example
+where num_col < 3;
+
+select num_col, char_col
+from null_example
+where num_col < 3
+    or num_col is null;
+
+select num_col, char_col
+from null_example
+where nvl(num_col, 0) < 3;
+
+select nvl(num_col, 0) as num_col, char_col
+from null_example
+where nvl(num_col, 0) < 3;
+
+-- ## Filtering Using SnowSight
+select o_orderkey, o_custkey, o_orderdate
+from orders
+where o_orderdate = :daterange
+    and o_orderpriority = :order_priority;
