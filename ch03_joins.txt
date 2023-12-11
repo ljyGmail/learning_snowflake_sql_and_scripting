@@ -1,0 +1,141 @@
+-- # Chapter 3: Joins
+use schema learning_sql.public;
+
+-- ## What Is a Join?
+describe table customer;
+describe table orders;
+
+select o_orderkey, o_orderstatus, o_orderdate, c_name
+from orders join customer
+on orders.o_custkey = customer.c_custkey
+limit 10;
+
+-- ## Table Aliases
+select 'Welcome to Snowflake SQL!' as welcome_message,
+    5 * 3.1415927 as circle_circumference,
+    dayname(current_date) as day_of_week;
+
+select o.o_orderkey, o.o_orderstatus, o.o_orderdate,
+    c.c_name
+from orders as o
+join customer as c
+on o.o_custkey = c.c_custkey
+limit 10;
+
+-- ## Inner Joins
+select o.o_orderkey, o.o_orderstatus, o.o_orderdate,
+    c.c_name
+from orders as o
+inner join  customer as c
+on o.o_custkey = c.c_custkey
+limit 10;
+
+create table customer_simple (custkey, custname)
+    as select *
+    from (values (101, 'BOB'), (102, 'KIM'), (103, 'JIM'));
+
+select * from customer_simple;
+
+create table orders_simple (ordernum, custkey)
+    as select *
+    from (values (990, 101), (991, 102),
+                (992, 101), (993, 104));
+
+select * from orders_simple;
+
+select o.ordernum, o.custkey, c.custname
+from orders_simple as o
+inner join customer_simple as  c
+on o.custkey = c.custkey;
+-- ## Outer Joins
+select o.ordernum, o.custkey, c.custname
+from orders_simple o
+left outer join
+customer_simple as c
+on o.custkey = c.custkey;
+
+select o.ordernum, o.custkey, c.custname
+from orders_simple as o
+right outer join
+customer_simple as c
+on o.custkey = c.custkey;
+
+-- ## Cross Joins
+select years.yearnum, qtrs.qtrname, qtrs.startmonth, qtrs.endmonth
+from
+(values (2020), (2021), (2022))
+as years (yearnum)
+cross join
+(values ('Q1', 1, 3), ('Q2', 4, 6), ('Q3', 7, 9), ('Q4', 10,  12))
+as qtrs (qtrname, startmonth, endmonth)
+order by 1, 2;
+
+-- ## Joining Three or More Tables
+describe table lineitem;
+describe table part;
+
+select o.o_orderkey, o.o_orderdate, c.c_name, p.p_name
+from orders as o
+inner join customer as c
+on o.o_custkey = c.c_custkey
+inner join lineitem as l
+on o.o_orderkey = l.l_orderkey
+inner join part as p
+on l.l_partkey = p.p_partkey
+limit 10;
+
+-- The sequence of the tables in the from clause makes no differenece.
+select o.o_orderkey, o.o_orderdate, c.c_name, p.p_name
+from part as p
+inner join lineitem as l
+on l.l_partkey = p.p_partkey
+inner join orders as o
+on o.o_orderkey = l.l_orderkey
+inner join customer as c
+on o.o_custkey = c.c_custkey
+limit 10;
+
+-- ### Joining a Table to Itself
+create table employee
+    (empid number, emp_name varchar(30), mgr_empid number)
+    as select *
+    from (values
+    (1001, 'Bob Smith', null),
+    (1002, 'Susan Jackson', 1001),
+    (1003, 'Greg Carpenter', 1001),
+    (1004, 'Robert Butler', 1002),
+    (1005, 'Kim Josephs', 1003),
+    (1006, 'John Tyler', 1004));
+
+select * from employee;
+
+select e.empid, e.emp_name, mgr.emp_name as mgr_name
+from employee as e
+inner join employee as mgr
+on e.mgr_empid = mgr.empid;
+
+select e.empid, e.emp_name, mgr.emp_name as mgr_name
+from employee e
+left outer join employee mgr
+on e.mgr_empid = mgr.empid;
+
+-- ### Joining the Same Table Twice 
+alter table employee add column birth_nationkey integer;
+alter table employee add column current_nationkey integer;
+
+describe table employee;
+
+update employee
+    set birth_nationkey = empid - 1000,
+    current_nationkey = empid - 999;
+
+select empid, emp_name, birth_nationkey, current_nationkey
+from employee;
+
+select e.empid,  e.emp_name,
+    n1.n_name as birth_nation, n2.n_name as current_nation
+from employee as e
+inner join nation as n1
+on e.birth_nationkey = n1.n_nationkey
+inner join nation as n2
+on e.current_nationkey = n2.n_nationkey;
